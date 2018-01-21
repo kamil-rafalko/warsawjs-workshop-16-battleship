@@ -55,12 +55,50 @@ class GameBoard extends ViewComponent {
 
 class GameController {
 
-    constructor(boardView) {
-        this._boardView = boardView
+    constructor(model) {
+        this._model = model
     }
 
     handleCellClick(row, column) {
-        this._boardView.setStateAt(row, column, 'miss')
+        this._model.fireAt(row, column)
+    }
+}
+
+class GameModel {
+
+    constructor() {
+        this._state = {}
+        this._observers = []
+
+        for(let rowIndex = 0; rowIndex < 10; rowIndex++) {
+            for (let columnIndex = 0; columnIndex < 10; columnIndex++) {
+                const hasShip = (Math.random() >= 0.8)
+                this._state[this.createCoordinatesKey(rowIndex, columnIndex)] = {
+                    hasShip: hasShip,
+                    firedAt: false
+                }
+            }
+        }
+    }
+
+    createCoordinatesKey(row, column) {
+        return row + 'x' + column
+    }
+
+    fireAt(row, column) {
+        const targetCell = this._state[this.createCoordinatesKey(row, column)];
+
+        if (targetCell.firedAt) {
+            return
+        }
+
+        targetCell.firedAt = true
+        const result = targetCell.hasShip ? 'hit' : 'miss'
+        this._observers.forEach(observer => observer('firedAt', { result, row, column }))
+    }
+
+    addObserver(observerFunction) {
+        this._observers.push(observerFunction)
     }
 }
 
@@ -72,7 +110,15 @@ function handleCellClick(row, column) {
 }
 
 const board = new GameBoard(handleCellClick);
-controller = new GameController(board);
+let model = new GameModel();
+model.addObserver((type, params) => {
+    switch (type) {
+        case 'firedAt':
+            board.setStateAt(params.row, params.column, params.result)
+            break;
+    }
+})
+controller = new GameController(model);
 
 gameElement.appendChild(board.getElement())
 
