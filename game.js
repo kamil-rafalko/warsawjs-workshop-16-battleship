@@ -1,17 +1,25 @@
-const gameElement = document.getElementById('game')
-const row = document.createElement('tr')
-const cell1 = document.createElement('td')
-const cell2 = document.createElement('td')
+class GameCell {
+    constructor() {
+        this._state = 'unknown'
+        this._element = document.createElement('td')
+        this._element.addEventListener('click', () => this.setState('miss'))
+    }
 
-gameElement.appendChild(row)
-row.appendChild(cell1)
-row.appendChild(cell2)
+    setState(state) {
+        if (state !== 'unknown' && state !== 'miss' && state !== 'hit') {
+            throw new Error('Invalid state')
+        }
+        this._state = state
+        this._element.className = 'cell_' + state
+    }
 
-
-function colorCell(event) {
-    event.target.classList.add('clicked')
+    getElement() {
+        return this._element
+    }
 }
 
-const cells = [cell1, cell2]
-
-cells.forEach(cell => cell.addEventListener('click', colorCell))
+const gameElement = document.getElementById('game')
+const row = document.createElement('tr')
+gameElement.appendChild(row)
+const cell1 = new GameCell()
+row.appendChild(cell1.getElement())
